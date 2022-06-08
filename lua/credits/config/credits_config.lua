@@ -1,5 +1,6 @@
-credits.config--.set( "Debug Mode", false )
-	.set( "donateURL", "" )
+credits.config
+	.set( "server", "serverID" )
+	.set( "storeURL", "store.url.com" )
 	.set( "categories", {
 		[ "Ranks" ] = 1,
 		[ "Moola" ] = 2,
@@ -120,110 +121,112 @@ credits.config--.set( "Debug Mode", false )
 		},
 	} )
 
-hook( "creditPackagesLoaded", "credits", function()
-	credits.newPackage( "cash_event", { 
-		name = "Printer Event",
-		category = "Moola",
-		description = "All printers give x2 money for 1 hour",
-		credits = 1500,
-		type = "command",
-		image = "/url.png",
-		vars = {
-			command = "events_printer 60",
-			runOnce = true
-		}
-	} )
-	
-	credits.newPackage( "cash_10k", { 
-		name = "$10,000 Cash",
-		category = "Moola",
-		description = "Instantly gives you $10,000.",
-		credits = 150,
-		type = "money",
-		image = "/url.png",
-		vars = {
-			money = 10000,
-			runOnce = true
-		}
-	} )
+--[[
+	Packages
+]]--
 
-	credits.newPackage( "group_vip", { 
-		name = "VIP",
-		category = "Ranks",
-		image = {
-			src = "",
-			width = "100%",
-			height = "100%"
-		},
-		description = "Gives you VIP",
-		credits = 1000,
-		buyOnce = true,
-		type = "group",
-		vars = {
-			groupid = "vip",
-			money = 50000,
-			runOnce = true,
-		}
-	} )
+credits.newPackage( "cash_event", { 
+	name = "Printer Event",
+	category = "Moola",
+	description = "All printers give x2 money for 1 hour",
+	credits = 1500,
+	type = "command",
+	image = "/url.png",
+	vars = {
+		command = "events_printer 60",
+		runOnce = true
+	}
+} )
 
-	credits.newPackage( "permwep_hook", { 
-		name = "Permanent Grappling Hook",
-		category = "Permanent Weapons",
-		description = "Permanently receive a Grappling Hook every time you spawn.",
-		credits = 1000,
-		buyOnce = true,
-		type = "weapon",
-		vars = {
-			weapon = "realistic_hook",
-		}
-	} )
-	
-	credits.newPackage( "permwep_machete", { 
-		name = "Permanent Machete",
-		category = "Permanent Weapons",
-		description = "Permanently receive a Machete every time you spawn.",
-		credits = 700,
-		buyOnce = true,
-		type = "weapon",
-		vars = {
-			weapon = "m9k_machete",
-		}
-	} )
+credits.newPackage( "cash_10k", { 
+	name = "$10,000 Cash",
+	category = "Moola",
+	description = "Instantly gives you $10,000.",
+	credits = 150,
+	type = "money",
+	image = "/url.png",
+	vars = {
+		money = 10000,
+		runOnce = true
+	}
+} )
 
-	credits.newPackage( "permwep_crowbar", { 
-		name = "Permanent Crowbar",
-		category = "Permanent Weapons",
-		description = "Permanently receive a Crowbar every time you spawn.",
-		credits = 750,
-		buyOnce = true,
-		type = "weapon",
-		vars = {
-			weapon = "weapon_crowbar",
-		}
-	} )
-	credits.newPackage( "permammo_rifle", { 
-		name = "Permanent Rifle Ammo",
-		category = "Permanent Ammo",
-		description = "Permanently receive +120 rifle rounds when you spawn.",
-		credits = 500,
-		buyOnce = true,
-		type = "ammo",
-		vars = {
-			ammoAmount = 120,
-			ammoType = "ar2",
-		}
-	} )
+credits.newPackage( "group_vip", { 
+	name = "VIP",
+	category = "Ranks",
+	image = {
+		src = "",
+		width = "100%",
+		height = "100%"
+	},
+	description = "Gives you VIP",
+	credits = 1000,
+	buyOnce = true,
+	type = "group",
+	vars = {
+		groupid = "vip",
+		money = 50000,
+		runOnce = true,
+	}
+} )
 
-	credits.newPackage( "propcount_50", { 
-		name = "Permanent +50 Prop Limit",
-		category = "Miscellaneous",
-		description = "Increases your prop limit by 50 permanently.",
-		credits = 3000,
-		type = "props",
-		buyOnce = true,
-		vars = {
-			amount = 50,
-			model = "models/props_interiors/Furniture_chair03a.mdl"
-		}
-	} )
-end )
+credits.newPackage( "permwep_hook", { 
+	name = "Permanent Grappling Hook",
+	category = "Permanent Weapons",
+	description = "Permanently receive a Grappling Hook every time you spawn.",
+	credits = 1000,
+	buyOnce = true,
+	type = "weapon",
+	vars = {
+		weapon = "realistic_hook",
+	}
+} )
+
+credits.newPackage( "permwep_machete", { 
+	name = "Permanent Machete",
+	category = "Permanent Weapons",
+	description = "Permanently receive a Machete every time you spawn.",
+	credits = 700,
+	buyOnce = true,
+	type = "weapon",
+	vars = {
+		weapon = "m9k_machete",
+	}
+} )
+
+credits.newPackage( "permwep_crowbar", { 
+	name = "Permanent Crowbar",
+	category = "Permanent Weapons",
+	description = "Permanently receive a Crowbar every time you spawn.",
+	credits = 750,
+	buyOnce = true,
+	type = "weapon",
+	vars = {
+		weapon = "weapon_crowbar",
+	}
+} )
+credits.newPackage( "permammo_rifle", { 
+	name = "Permanent Rifle Ammo",
+	category = "Permanent Ammo",
+	description = "Permanently receive +120 rifle rounds when you spawn.",
+	credits = 500,
+	buyOnce = true,
+	type = "ammo",
+	vars = {
+		ammoAmount = 120,
+		ammoType = "ar2",
+	}
+} )
+
+credits.newPackage( "propcount_50", { 
+	name = "Permanent +50 Prop Limit",
+	category = "Miscellaneous",
+	description = "Increases your prop limit by 50 permanently.",
+	credits = 3000,
+	type = "props",
+	buyOnce = true,
+	vars = {
+		amount = 50,
+		model = "models/props_interiors/Furniture_chair03a.mdl"
+	}
+} )

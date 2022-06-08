@@ -1,9 +1,5 @@
 local PLAYER = FindMetaTable( "Player" )
 
-function PLAYER:GetCredits()
-	return self.credits and self.credits.amount
-end
-
 function PLAYER:GetCreditTransactions( package )
 	if ( self.credits ) then
 		if ( package ) then

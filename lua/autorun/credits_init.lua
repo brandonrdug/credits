@@ -21,3 +21,4 @@ include_cl( "credits/methods/cl_credits_methods.lua" )
 
 include_sv( "credits/meta/sv_credits_meta.lua" )
 include_sh( "credits/meta/sh_credits_meta.lua" )
+include_cl( "credits/meta/cl_credits_meta.lua" )

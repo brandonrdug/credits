@@ -46,12 +46,15 @@ function PANEL:Init()
 	end
 
 	self.Header.purchase.DoClick = function( this )
-		gui.OpenURL( credits.config.get( "donateURL" ) )
+		gui.OpenURL( credits.config.get( "storeURL" ) )
 	end
 
 	self.Header.purchase:SetupSoundEvents()
 
 	self:Dock( FILL )
+
+	net.Start( "credits.requestCredits" )
+	net.SendToServer()
 
 	if ( credits.packages and LocalPlayer().credits.transactions ) then
 		self:Load()

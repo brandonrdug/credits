@@ -1,11 +1,5 @@
-credits.queue = {}
-
---[[
-	Name:
-	Desc:
-	Params:
-	Returns:
-]]--
+-- credits.queue = {}
+credits.packages = {}
 
 function credits.getData( steamID64, callback )
 	credits.db.query( credits.db.queries.getData:format( steamID64 ), function( query, data )
@@ -26,95 +20,90 @@ function credits.getData( steamID64, callback )
 	end )
 end
 
---[[
-	Name:
-	Desc:
-	Params:
-	Returns:
-]]--
-
-function credits.setCredits( steamID64, int, callback )
-	credits.db.query( credits.db.queries.setCredits:format( int, steamID64 ), function()
-		if ( callback ) then
-			callback()
+function credits.getCredits( steamID64, callback )
+	credits.db.query( credits.db.queries.getCredits:format( steamID64 ), function( query, data )
+		if (data[ 1 ]) then
+			callback( data[ 1 ].credits )
+		else
+			callback( nil, 404 )
 		end
 	end )
 end
 
---[[
-	Name:
-	Desc:
-	Params:
-	Returns:
-]]--
+// @ alter to be an api call
+// done
+function credits.setCredits( steamID64, int, callback, adminID64 )
+	credits.getCredits( steamID64, function( credits, error )
+		if ( error ) then
+			return callback( error )
+		end
 
-function credits.getCredits( steamID64, callback )
-	credits.db.query( credits.db.queries.getCredits:format( steamID64 ), function( query, data )
-		callback( data[ 1 ].credits )
+		HTTP( function() end, function( code, body, headers )
+			if ( code == 404 ) then
+				return callback(code)
+			end
+
+			callback()
+		end, "PUT", "https://hubtesting.exhibitionrp.com/api/store/addcredits", {}, {
+			["Authorization"] = "f=(ZlHj/wIK@^p>j%<;$,Q_H#c]pXw*^ilHnmHAVwy1+ppy_yntse+HRlR[pvz"
+		}, util.TableToJSON( { 
+			["steamid"] = steamID64,
+			["credits"] = int - credits,
+			["adminid"] = adminID64
+		} ), "application/json" )
 	end )
 end
 
---[[
-	Name:
-	Desc:
-	Params:
-	Returns:
-]]--
-
-function credits.newPackage( uniqueid, info, callback )
-	assert( credits.packages, "Packages aren't initialized yet; can't create new one." )
-
+// @ cut
+// edited
+function credits.newPackage( uniqueid, info )
 	uniqueid = uniqueid:lower()
 
 	if ( credits.getPackage( uniqueid ) ) then
 		return
 	end
 
-	local duration = ( info.duration == 0 ) and nil or info.duration
+	-- local duration = ( info.duration == 0 ) and nil or info.duration
 
-	local JSON = credits.db.conn:escape( util.TableToJSON( info.vars or {} ) )
-	local description = info.description and credits.db.conn:escape( info.description ) or ""
-	local upgradeFrom = info.upgradeFrom and credits.db.conn:escape( util.TableToJSON( info.upgradeFrom ) )
-	local image = info.image and ( istable( info.image ) and credits.db.conn:escape( util.TableToJSON( info.image ) ) or info.image )
-		image = image and "'" .. image .. "'"
+	-- local JSON = credits.db.conn:escape( util.TableToJSON( info.vars or {} ) )
+	-- local description = info.description and credits.db.conn:escape( info.description ) or ""
+	-- local upgradeFrom = info.upgradeFrom and credits.db.conn:escape( util.TableToJSON( info.upgradeFrom ) )
+	-- local image = info.image and ( istable( info.image ) and credits.db.conn:escape( util.TableToJSON( info.image ) ) or info.image )
+		-- image = image and "'" .. image .. "'"
 
-	credits.db.query( credits.db.queries.insertPackage:format( uniqueid, info.name, info.category, description, info.credits, info.type, upgradeFrom or "null", info.buyOnce or "null", info.order or "null", image or "null", JSON, info.duration or "null" ) .. credits.db.queries.getMaxID, function( query )
+	-- credits.db.query( credits.db.queries.insertPackage:format( uniqueid, info.name, info.category, description, info.credits, info.type, upgradeFrom or "null", info.buyOnce or "null", info.order or "null", image or "null", JSON, info.duration or "null" ) .. credits.db.queries.getMaxID, function( query )
 
-		local id = query:getNextResults()[ 1 ][ "id" ]
+	local id = query:getNextResults()[ 1 ][ "id" ]
 
-		credits.packages[ id ] = {
-			[ "id" ]			= id,
-			[ "uniqueid" ] 		= uniqueid,
-			[ "name" ] 			= info.name,
-			[ "category" ] 		= info.category,
-			[ "description" ]	= info.description or "",
-			[ "credits" ] 		= info.credits,
-			[ "type" ] 			= info.type,
-			[ "upgradeFrom" ]	= info.upgradeFrom,
-			[ "buyOnce" ]		= info.buyOnce and 1 or 0,
-			[ "order" ]			= info.order or 0,
-			[ "image" ]			= info.image,
-			[ "vars" ] 			= info.vars,
-			[ "duration" ] 		= info.duration,
-			[ "timeScale" ]     = info.timeScale,
-			[ "timeFree" ]      = info.timeFree,
-			[ "disabled" ]		= 0
-		}
+	credits.packages[ id ] = {
+		[ "id" ]			= id,
+		[ "uniqueid" ] 		= uniqueid,
+		[ "name" ] 			= info.name,
+		[ "category" ] 		= info.category,
+		[ "description" ]	= info.description or "",
+		[ "credits" ] 		= info.credits,
+		[ "type" ] 			= info.type,
+		[ "upgradeFrom" ]	= info.upgradeFrom,
+		[ "buyOnce" ]		= info.buyOnce and 1 or 0,
+		[ "order" ]			= info.order or 0,
+		[ "image" ]			= info.image,
+		[ "vars" ] 			= info.vars,
+		[ "duration" ] 		= info.duration,
+		[ "timeScale" ]     = info.timeScale,
+		[ "timeFree" ]      = info.timeFree,
+		[ "disabled" ]		= 0
+	}
 
-		credits.net.newPackage( credits.packages[ id ] )
+	credits.net.newPackage( credits.packages[ id ] )
 
-		if ( callback ) then
-			callback( credits.packages[ id ] )
-		end
-	end )
+		// @ previously callback was an arg
+		-- if ( callback ) then
+		-- 	callback( credits.packages[ id ] )
+		-- end
+	-- end )
 end
 
---[[
-	Name:
-	Desc:
-	Params:
-	Returns:
-]]--
+// @ cut
 
 function credits.setDiscount( packageid, percentage, callback )
 	assert( credits.packages, "Packages aren't initialized yet; can't set discount of " .. packageid )
@@ -131,23 +120,7 @@ function credits.setDiscount( packageid, percentage, callback )
 	end
 end
 
-
--- deprecated
-function credits.setGlobalDiscount( percentage )
-	assert( credits.packages, "Packages aren't initialized yet; can't set discount" )
-
-	for k, v in ipairs( credits.packages ) do
-		v.discount = percentage
-		credits.net.updatePackage( v, "discount" )
-	end
-end
-
---[[
-	Name:
-	Desc:
-	Params:
-	Returns:
-]]--
+// @ adjust
 
 function credits.setSale( percentage )
 	assert( credits.packages, "Packages aren't initialized yet; can't set discount" )
@@ -164,139 +137,114 @@ function credits.setSale( percentage )
 	end
 end
 
---[[
-	Name:
-	Desc:
-	Params:
-	Returns:
-]]--
-
-function credits.getActiveTransactionsByPackage( steamid64, packageid, callback )
-	credits.db.query( credits.db.queries.getActiveTransactionsByPackage:format( steamid64, packageid ), function( query, data )
-		if ( callback ) then
-			callback( data )
-		end
-	end )
-end
-
---[[
-	Name:
-	Desc:
-	Params:
-	Returns:
-]]--
+// @ adjust for asynchronous checks on credits
 
 function credits.transact( pl, packageID, charge, callback )
-	assert( pl.credits, pl:NameID() .. " is not initialized." )
+	-- assert( pl.credits, pl:NameID() .. " is not initialized." )
 
 	local package = credits.getPackage( packageID )
 	assert( package.disabled == 0, "This package is disabled, how'd they get to buying this?" )
 
-	if ( package.buyOnce == 1 ) then
-		local transactions = pl:GetCreditTransactions( packageID )
+	pl:GetCredits( function( plCredits, error )
+		if ( error ) then
+			return callback and callback( error )
+		end
 
-		if ( transactions[ 1 ] ) then
-			ErrorNoHalt( pl, " tried buying " .. packageID .. " a second time. How'd we get here?" )			
+		if ( package.buyOnce == 1 ) then
+			local transactions = pl:GetCreditTransactions( packageID )
+
+			if ( transactions[ 1 ] ) then
+				return ErrorNoHalt( pl, " tried buying " .. packageID .. " a second time. How'd we get here?" )
+			end
+		end
+
+		local price = 0
+		local upgrading, upgradingFrom
+
+		if ( charge ) then
+			price, upgrading, upgradingFrom = credits.getPriceWithPlayer( package, pl )
+		end
+
+		if ( plCredits < price ) then
+			if ( callback ) then
+				callback( "cant_afford" )
+			end
 
 			return
 		end
-	end
 
-	local price = 0
-	local upgrading, upgradingFrom
+		local duration = package.duration
 
-	if ( charge ) then
-		price, upgrading, upgradingFrom = credits.getPriceWithPlayer( package, pl )
-	end
+		if ( duration and package.buyOnce == 1 ) then
+			local activeTransactions = pl:GetActiveTransactions( packageID )
+			
+			if ( activeTransactions[ 1 ] ) then
+				-- Link time between last transaction and this one, then disable last one
+				duration = duration + ( transaction.expireTime - os.time() )
 
-	if ( pl:GetCredits() < price ) then
-		if ( callback ) then
-			callback( "cant_afford" )
+				// @add to callback
+				credits.db.query( credits.db.queries.disableTransactionByPackage:format( pl:SteamID64(), packageID ) )
+
+				activeTransactions[ 1 ].disabled = 1
+				credits.net.updateTransaction( pl, activeTransactions[ 1 ], "disabled" )
+			end
 		end
 
-		return
-	end
+		if ( upgrading ) then
+			for k, v in ipairs( upgradingFrom ) do
+				-- Disable the old transactions if upgrading
+				credits.db.query( credits.db.queries.disableTransactionByPackage:format( pl:SteamID64(), package.upgradeFrom ) )
 
-	local duration = package.duration
-
-	if ( duration and package.buyOnce == 1 ) then
-		local activeTransactions = pl:GetActiveTransactions( packageID )
-		
-		if ( activeTransactions[ 1 ] ) then
-			-- Link time between last transaction and this one, then disable last one
-			duration = duration + ( transaction.expireTime - os.time() )
-
-			credits.db.query( credits.db.queries.disableTransactionByPackage:format( pl:SteamID64(), packageID ) )
-
-			activeTransactions[ 1 ].disabled = 1
-			credits.net.updateTransaction( pl, activeTransactions[ 1 ], "disabled" )
+				v.disabled = 1
+				credits.net.updateTransaction( pl, v, "disabled" )
+			end
 		end
-	end
 
-	if ( upgrading ) then
-		for k, v in ipairs( upgradingFrom ) do
-			-- Disable the old transactions if upgrading
-			credits.db.query( credits.db.queries.disableTransactionByPackage:format( pl:SteamID64(), package.upgradeFrom ) )
+		local time = os.time()
 
-			v.disabled = 1
-			credits.net.updateTransaction( pl, v, "disabled" )
-		end
-	end
-
-	-- Keep the player from spamming transactions since it takes time before their credits are reduced
-	pl.credits.amount = pl:GetCredits() - price
-
-	local time = os.time()
-
-	credits.db.query( credits.db.queries.setCredits:format( pl:GetCredits(), pl:SteamID64() ) .. credits.db.queries.insertTransaction:format( duration or "null", pl:SteamID64(), package.uniqueid, -price, package.type, credits.db.conn:escape( util.TableToJSON( package.vars ) ), time ) .. "SELECT MAX( `id` ) AS `id` FROM `transactions`; SELECT `expireTime` AS `expireTime` FROM `transactions` WHERE `id` = ( SELECT MAX( `id` ) FROM `transactions` )", function( query )
-		if ( IsValid( pl ) ) then
-			-- Skip the results from setting credits and setting a variable in sql
-			query:getNextResults()
+		credits.db.query( credits.db.queries.setCredits:format( plCredits, pl:SteamID64() ) .. credits.db.queries.insertTransaction:format( duration or "null", pl:SteamID64(), package.uniqueid, -price, package.type, credits.db.conn:escape( util.TableToJSON( package.vars ) ), time ) .. "SELECT LAST_INSERT_ID() AS `id` FROM `transactions`; SELECT `expireTime` AS `expireTime` FROM `transactions` WHERE `id` = ( SELECT LAST_INSERT_ID() )", function( query )
+			if ( IsValid( pl ) ) then
+				-- Skip the results from setting credits and setting a variable in sql
 				query:getNextResults()
-			local id = query:getNextResults()[ 1 ][ "id" ]
+					query:getNextResults()
+				local id = query:getNextResults()[ 1 ][ "id" ]
 
-			pl:GetCreditTransactions()[ id ] = {
-				[ "id" ] 			= id,
-				[ "steamID64" ] 	= pl:SteamID64(),
-				[ "package" ] 		= package.uniqueid,
-				[ "credits" ] 		= -price,
-				[ "activated" ] 	= 0,
-				[ "type" ]			= package.type,
-				[ "vars" ]			= package.vars,
-				[ "time" ] 			= time,
-				[ "expireTime" ]	= query:getNextResults()[ 1 ][ "expireTime" ],
-				[ "disabled" ]		= 0
-			}
+				pl:GetCreditTransactions()[ id ] = {
+					[ "id" ] 			= id,
+					[ "steamID64" ] 	= pl:SteamID64(),
+					[ "package" ] 		= package.uniqueid,
+					[ "credits" ] 		= -price,
+					[ "activated" ] 	= 0,
+					[ "type" ]			= package.type,
+					[ "vars" ]			= package.vars,
+					[ "time" ] 			= time,
+					[ "expireTime" ]	= query:getNextResults()[ 1 ][ "expireTime" ],
+					[ "disabled" ]		= 0
+				}
 
-			credits.net.sendCredits( pl )
-			credits.net.sendTransaction( pl, pl:GetCreditTransactions()[ id ] )
+				credits.net.sendCredits( pl )
+				credits.net.sendTransaction( pl, pl:GetCreditTransactions()[ id ] )
 
-			hook.Run( "packageBought", pl, package, pl:GetCreditTransactions()[ id ] )
+				hook.Run( "packageBought", pl, package, pl:GetCreditTransactions()[ id ] )
 
-			da.amsg( "lol some nerd just wasted money again! thanks # for buying #!" )
-				:Insert( pl )
-				:Insert( DA_COLOR, package.name )
-				:Send()
+				da.amsg( "Someone bought something! thanks # for buying #!" )
+					:Insert( pl )
+					:Insert( DA_COLOR, package.name )
+					:Send()
 
-			credits.runAction( pl, id )
+				credits.runAction( pl, id )
 
-			if ( callback ) then
-				callback()
+				if ( callback ) then
+					callback()
+				end
+			else
+				if ( callback ) then
+					callback( "disconnected" )
+				end
 			end
-		else
-			if ( callback ) then
-				callback( "disconnected" )
-			end
-		end
+		end )
 	end )
 end
-
---[[
-	Name:
-	Desc:
-	Params:
-	Returns:
-]]--
 
 function credits.runAction( pl, transactionid, callback )
 	local transaction = pl:GetCreditTransactions()[ transactionid ]
@@ -349,58 +297,39 @@ function credits.runAction( pl, transactionid, callback )
 	end
 end
 
---[[
-	Name:
-	Desc:
-	Params:
-	Returns:
-]]--
+// initialize players
 
-function credits.getTransactions( steamID64, callback )
-	credits.db.query( credits.db.queries.getTransactions:format( steamId64 ), function( query, data )
-		callback( data )
-	end )
-end
-
---[[
-	Initializing packages/players
-]]--
-
-credits.db.query( "SELECT * FROM `packages`", function( query, packages )
-	for k, v in pairs( packages ) do
-		v.vars = v.vars and util.JSONToTable( v.vars )
-		v.upgradeFrom = v.upgradeFrom and util.JSONToTable( v.upgradeFrom )
+-- credits.db.query( "SELECT * FROM `packages`", function( query, packages )
+-- 	// @ cut
+-- 	for k, v in pairs( packages ) do
+-- 		v.vars = v.vars and util.JSONToTable( v.vars )
+-- 		v.upgradeFrom = v.upgradeFrom and util.JSONToTable( v.upgradeFrom )
 		
-		-- if v.image == a url instead of a table, JSONToTable will return nil and we can correct for that
-		local JtT = v.image and util.JSONToTable( v.image )
-			v.image = v.image and ( JtT or v.image )
-	end
+-- 		-- if v.image == a url instead of a table, JSONToTable will return nil and we can correct for that
+-- 		local JtT = v.image and util.JSONToTable( v.image )
+-- 			v.image = v.image and ( JtT or v.image )
+-- 	end
 
-	credits.packages = packages
+-- 	credits.packages = packages
 
-	for k, v in ipairs( credits.queue ) do
-		if ( IsValid( v ) ) then
-			credits.InitializePlayer( v )
-		end
-	end
+-- 	for k, v in ipairs( credits.queue ) do
+-- 		if ( IsValid( v ) ) then
+-- 			credits.InitializePlayer( v )
+-- 		end
+-- 	end
 
-	credits.queue = nil
+-- 	credits.queue = nil
 
-	hook.Run( "creditPackagesLoaded" )
-end )
-
---[[
-	Name:
-	Desc:
-	Params:
-	Returns:
-]]--
+-- 	hook.Run( "creditPackagesLoaded" )
+-- end )
 
 function credits.initializePlayer( pl )
-	if ( not credits.packages ) then
-		table.insert( credits.queue, pl )
-		return
-	end
+	// insert into queue for initialization
+	// @ cut
+	-- if ( not credits.packages ) then
+	-- 	table.insert( credits.queue, pl )
+	-- 	return
+	-- end
 
 	credits.getData( pl:SteamID64(), function( creditAmount, transactions )		
 		if ( IsValid( pl ) ) then
@@ -413,9 +342,10 @@ function credits.initializePlayer( pl )
 				pl.credits.transactions[ v.id ] = v
 			end
 
-			credits.net.sendCredits( pl )
+			// @ cut to only request when opening f4
+			// credits.net.sendCredits( pl )
 
-			-- Flexibility to set up data in player tables in the config
+			-- run player inits for package prereqs
 			for k, v in pairs( credits.config.get( "packageTypes" ) ) do
 				if ( v.playerInit ) then
 					v.playerInit( pl )

@@ -39,7 +39,7 @@ da.commands:Command( "addcredits" )
 								targ.credits.amount = int
 								credits.net.sendCredits( targ )
 							end
-						end )
+						end, pl and pl:SteamID64() )
 					else
 						da.sendcmderr(pl, cmd, "Something went wrong! Contact a developer.")
 					end
@@ -60,7 +60,7 @@ da.commands:Command( "addcredits" )
 									:Insert( tostring( args[ 2 ] ):Comma() )
 									:Send()
 							end
-						end )
+						end, pl and pl:SteamID64() )
 					else
 						da.sendcmderr(pl, cmd, "Something went wrong! Contact a developer.")
 					end

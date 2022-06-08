@@ -8,6 +8,7 @@ net.addStrings(
 	"credits.playerTransaction",
 	"credits.sendPackages",
 	"credits.requestData",
+	"credits.requestCredits",
 	"credits.newPackage",
 	"credits.updatePackage",
 	"credits.oneTimeNotification"
@@ -15,7 +16,7 @@ net.addStrings(
 
 --[[
 	Name: sendCredits
-	Desc: A networking function for less cluttered code; to let the client know how many credits they have.
+	Desc: to let the client know how many credits they have.
 	Params: <entity> Player
 	Returns: nil
 ]]--
@@ -28,7 +29,7 @@ end
 
 --[[
 	Name: sendPackages
-	Desc: A networking function for less cluttered code; to give the client package data.
+	Desc: to give the client package data.
 	Params: <entity> Player
 	Returns: nil
 ]]--
@@ -39,7 +40,7 @@ end
 
 --[[
 	Name: newPackage
-	Desc: A networking function for less cluttered code; to send players a newly made package, so that they have an updated list.
+	Desc: to send players a newly made package, so that they have an updated list.
 	Params: <table> Package
 	Returns: nil
 ]]--
@@ -52,7 +53,7 @@ end
 
 --[[
 	Name: updatePackage
-	Desc: A networking function for less cluttered code; to send players updates on packages so they they have an updated list.
+	Desc: to send players updates on packages so they they have an updated list.
 	Params: <table> Package, <string> Key ( to access the provided package )
 	Returns: nil
 ]]--
@@ -67,7 +68,7 @@ end
 
 --[[
 	Name: sendTransactions
-	Desc: A networking function for less cluttered code; to give the client transaction data.
+	Desc: to give the client transaction data.
 	Params: <entity> Player
 	Returns: nil
 ]]--
@@ -78,7 +79,7 @@ end
 
 --[[
 	Name: sendTransaction
-	Desc: A networking function for less cluttered code; to send a player data on their transaction.
+	Desc: to send a player data on their transaction.
 	Params: <entity> Player, <table> Transaction
 	Returns: nil
 ]]--
@@ -91,7 +92,7 @@ end
 
 --[[
 	Name: updateTransaction
-	Desc: A networking function for less cluttered code; to update a transaction's data.
+	Desc: to update a transaction's data.
 	Params: <entity> Player, <table> Package
 	Returns: nil
 
@@ -108,7 +109,7 @@ end
 
 --[[
 	Name: oneTimeNotification
-	Desc: A networking function for less cluttered code; to let a player know that their transaction had a one time use and that it was used.
+	Desc: to let a player know that their transaction had a one time use and that it was used.
 	Params: <entity> Player, <int> Transaction ID
 	Returns: nil
 ]]--
@@ -134,6 +135,10 @@ net.Receive( "credits.requestData", function( len, pl )
 	end
 end )
 
+net.CooledReceiver( "credits.requestCredits", 1, function( len, pl )
+	credits.net.sendCredits(pl)
+end )
+
 net.CooledReceiver( "credits.playerTransaction", 2, function( len, pl )
 	local packageid = net.ReadString()
 
@@ -141,7 +146,9 @@ net.CooledReceiver( "credits.playerTransaction", 2, function( len, pl )
 		local package = credits.getPackage( packageid )
 
 		credits.transact( pl, packageid, true, function( status )
-			if ( status == "cant_afford" ) then
+			if ( status == 404 ) then
+				da.sendmsg( pl, "You need an account on our website to make any transactions." )
+			else if ( status == "cant_afford" ) then
 				-- Send them a lil message because they couldn't have gotten here without running clientside-lua
 				da.sendmsg( pl, "You can't afford this package, how'd you get here?" )
 			else
