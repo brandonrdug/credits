@@ -22,9 +22,13 @@ net.addStrings(
 ]]--
 
 function credits.net.sendCredits( pl )
-	net.Start( "credits.sendCredits" )
-		net.WriteInt( pl:GetCredits(), 32 )
-	net.Send( pl )
+	pl:GetCredits( function( amount, error )
+		if ( IsValid( pl ) and !error ) then
+			net.Start( "credits.sendCredits" )
+				net.WriteInt( amount, 32 )
+			net.Send( pl )
+		end
+	end )
 end
 
 --[[
@@ -148,7 +152,7 @@ net.CooledReceiver( "credits.playerTransaction", 2, function( len, pl )
 		credits.transact( pl, packageid, true, function( status )
 			if ( status == 404 ) then
 				da.sendmsg( pl, "You need an account on our website to make any transactions." )
-			else if ( status == "cant_afford" ) then
+			elseif ( status == "cant_afford" ) then
 				-- Send them a lil message because they couldn't have gotten here without running clientside-lua
 				da.sendmsg( pl, "You can't afford this package, how'd you get here?" )
 			else

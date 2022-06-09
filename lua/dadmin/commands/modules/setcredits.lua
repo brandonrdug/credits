@@ -13,7 +13,17 @@ da.commands:Command( "setcredits" )
 		if ( IsValid( targ ) ) then
 			targID = targ:SteamID()
 
-			targ:SetCredits( args[ 2 ], function()
+			targ:SetCredits( args[ 2 ], function( error )
+				if ( error ) then
+					if ( IsValid( pl ) ) then
+						pl:Message( "# does not have an account on our website. Have them make one and then try again." )
+							:Insert( IsValid( targ ) and targ or targID )
+							:Send()
+					end
+					
+					return
+				end
+
 				if ( IsValid( pl ) ) then
 					pl:Message( "You set #'s credits to #." )
 						:Insert( IsValid( targ ) and targ or targID )
@@ -32,7 +42,7 @@ da.commands:Command( "setcredits" )
 			local id64 = util.SteamIDTo64( args[ 1 ] )
 
 			if ( id64 != "0" ) then
-				credits.getData( id64, function( creditAmount, transactions )
+				credits.getData( id64, function( creditAmount, transactions, error )
 					if ( creditAmount ) then
 						credits.setCredits( id64, args[ 2 ], function()
 							if ( IsValid( pl ) ) then
@@ -42,12 +52,14 @@ da.commands:Command( "setcredits" )
 									:Send()
 							end
 						end )
+					else if ( error == 404 ) then
+						da.sendcmderr( pl, cmd, "User doesn't have an account on the website. Have them make one and try again." )
 					else
-						da.sendcmderr(pl, cmd, "Something went wrong! Contact a developer.")
+						da.sendcmderr( pl, cmd, "Something went wrong! Contact a developer." )
 					end
 				end )
 			else
-				da.sendcmderr(pl, cmd, "Invalid target \"" .. args[ 1 ] .. "\".")
+				da.sendcmderr( pl, cmd, "Invalid target \"" .. args[ 1 ] .. "\"." )
 			end
 		end
 	end )

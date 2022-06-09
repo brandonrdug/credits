@@ -5,7 +5,15 @@ function PLAYER:GetCredits( callback )
 end
 
 function PLAYER:SetCredits( int, callback )
-	credits.setCredits( self:SteamID64(), int, function()
+	credits.setCredits( self:SteamID64(), int, function( error )
+		if ( error ) then
+			if ( callback ) then
+				callback( error )
+			end
+			
+			return
+		end
+
 		if ( IsValid( self ) ) then
 			credits.net.sendCredits( self )
 

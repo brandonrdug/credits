@@ -12,44 +12,38 @@ da.commands:Command( "addcredits" )
 		if ( IsValid( targ ) ) then
 			local targID = targ:SteamID()
 
-			if ( targ.credits ) then
-				targ:SetCredits( targ:GetCredits() + args[ 2 ], function()
-					if ( IsValid( pl ) ) then
-						pl:Message( "You gave # # credits." )
-							:Insert( IsValid( targ ) and targ or targID )
-							:Insert( tostring( args[ 2 ] ):Comma() )
-							:Send()
-					end
+			targ:GetCredits( function( amount, error )
+				if ( error ) then
+					pl:Message( "# does not have an account on our website. Have them make one and then try again." )
+						:Insert( IsValid( targ ) and targ or targID )
+						:Send()
+					
+					return
+				end
 
-					if ( IsValid( targ ) and not suppress ) then
-						targ:Message( "# gave you # credits." )
-							:Insert( IsValid( pl ) and pl or plID )
-							:Insert( tostring( args[ 2 ] ):Comma() )
-							:Send()
-					end
-				end )
-			else
-				// in case their data hasn't loaded for whatever reason; initialize and update client
-				local id64 = targ:SteamID64()
+				if ( IsValid( targ ) ) then
+					targ:SetCredits( amount + args[ 2 ], function()
+						if ( IsValid( pl ) ) then
+							pl:Message( "You gave # # credits." )
+								:Insert( IsValid( targ ) and targ or targID )
+								:Insert( tostring( args[ 2 ] ):Comma() )
+								:Send()
+						end
 
-				credits.getData( id64, function( creditAmount, transactions )
-					if ( creditAmount ) then
-						credits.setCredits( id64, creditAmount + args[ 2 ], function()
-							if ( IsValid( targ ) and targ.credits ) then
-								targ.credits.amount = int
-								credits.net.sendCredits( targ )
-							end
-						end, pl and pl:SteamID64() )
-					else
-						da.sendcmderr(pl, cmd, "Something went wrong! Contact a developer.")
-					end
-				end )
-			end
+						if ( IsValid( targ ) and not suppress ) then
+							targ:Message( "# gave you # credits." )
+								:Insert( IsValid( pl ) and pl or plID )
+								:Insert( tostring( args[ 2 ] ):Comma() )
+								:Send()
+						end
+					end )
+				end
+			end )
 		else
 			local id64 = util.SteamIDTo64( args[ 1 ] )
 
 			if ( id64 != "0" ) then
-				credits.getData( id64, function( creditAmount, transactions )
+				credits.getData( id64, function( creditAmount, transactions, error )
 					if ( creditAmount ) then
 						local sum = creditAmount + args[ 2 ]
 
@@ -61,8 +55,10 @@ da.commands:Command( "addcredits" )
 									:Send()
 							end
 						end, pl and pl:SteamID64() )
+					else if ( error == 404 ) then
+						da.sendcmderr( pl, cmd, "User doesn't have an account on the website. Have them make one and try again." )
 					else
-						da.sendcmderr(pl, cmd, "Something went wrong! Contact a developer.")
+						da.sendcmderr( pl, cmd, "Something went wrong! Contact a developer." )
 					end
 				end )
 			else

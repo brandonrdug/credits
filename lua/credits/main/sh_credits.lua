@@ -6,13 +6,7 @@
 ]]--
 
 function credits.getPackage( id )
-	assert( credits.packages, "Packages aren't initialized yet; can't get package." )
-
-	for k, v in ipairs( credits.packages ) do
-		if ( v.uniqueid == id ) then
-			return v
-		end
-	end
+	return credits.packages[id]
 end
 
 --[[

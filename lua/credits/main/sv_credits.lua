@@ -1,20 +1,22 @@
 -- credits.queue = {}
 credits.packages = {}
 
+
+// CURRENTLY ON THIS ~!@@# $@Q#$ WEFDFDF GDFG DFGGDFDFG DFGGDF XCVDFGDFGS DF DFFG 
 function credits.getData( steamID64, callback )
 	credits.db.query( credits.db.queries.getData:format( steamID64 ), function( query, data )
 		local data = query:getNextResults()
 
-		if ( not data[ 1 ] ) then
-			credits.db.query( credits.db.queries.insertUser:format( steamID64, 0 ), function( query )
-				callback( 0, {} )
-			end )
-		else
+		if ( data[ 1 ] ) then
 			local credits = data[ 1 ].credits
 			query:getNextResults()
 			
 			if ( callback ) then
 				callback( credits, query:getData() )
+			end
+		else
+			if ( callback ) then
+				callback( nil, nil, 404 )
 			end
 		end
 	end )
@@ -33,7 +35,7 @@ end
 // @ alter to be an api call
 // done
 function credits.setCredits( steamID64, int, callback, adminID64 )
-	credits.getCredits( steamID64, function( credits, error )
+	credits.getCredits( steamID64, function( amount, error )
 		if ( error ) then
 			return callback( error )
 		end
@@ -48,7 +50,7 @@ function credits.setCredits( steamID64, int, callback, adminID64 )
 			["Authorization"] = "f=(ZlHj/wIK@^p>j%<;$,Q_H#c]pXw*^ilHnmHAVwy1+ppy_yntse+HRlR[pvz"
 		}, util.TableToJSON( { 
 			["steamid"] = steamID64,
-			["credits"] = int - credits,
+			["credits"] = int - amount,
 			["adminid"] = adminID64
 		} ), "application/json" )
 	end )
@@ -73,10 +75,9 @@ function credits.newPackage( uniqueid, info )
 
 	-- credits.db.query( credits.db.queries.insertPackage:format( uniqueid, info.name, info.category, description, info.credits, info.type, upgradeFrom or "null", info.buyOnce or "null", info.order or "null", image or "null", JSON, info.duration or "null" ) .. credits.db.queries.getMaxID, function( query )
 
-	local id = query:getNextResults()[ 1 ][ "id" ]
+	-- local id = query:getNextResults()[ 1 ][ "id" ]
 
-	credits.packages[ id ] = {
-		[ "id" ]			= id,
+	credits.packages[ uniqueid ] = {
 		[ "uniqueid" ] 		= uniqueid,
 		[ "name" ] 			= info.name,
 		[ "category" ] 		= info.category,
@@ -94,7 +95,7 @@ function credits.newPackage( uniqueid, info )
 		[ "disabled" ]		= 0
 	}
 
-	credits.net.newPackage( credits.packages[ id ] )
+	credits.net.newPackage( credits.packages[ uniqueid ] )
 
 		// @ previously callback was an arg
 		-- if ( callback ) then
@@ -145,7 +146,7 @@ function credits.transact( pl, packageID, charge, callback )
 	local package = credits.getPackage( packageID )
 	assert( package.disabled == 0, "This package is disabled, how'd they get to buying this?" )
 
-	pl:GetCredits( function( plCredits, error )
+	pl:GetCredits( function( amount, error )
 		if ( error ) then
 			return callback and callback( error )
 		end
@@ -165,7 +166,7 @@ function credits.transact( pl, packageID, charge, callback )
 			price, upgrading, upgradingFrom = credits.getPriceWithPlayer( package, pl )
 		end
 
-		if ( plCredits < price ) then
+		if ( amount < price ) then
 			if ( callback ) then
 				callback( "cant_afford" )
 			end
@@ -202,7 +203,7 @@ function credits.transact( pl, packageID, charge, callback )
 
 		local time = os.time()
 
-		credits.db.query( credits.db.queries.setCredits:format( plCredits, pl:SteamID64() ) .. credits.db.queries.insertTransaction:format( duration or "null", pl:SteamID64(), package.uniqueid, -price, package.type, credits.db.conn:escape( util.TableToJSON( package.vars ) ), time ) .. "SELECT LAST_INSERT_ID() AS `id` FROM `transactions`; SELECT `expireTime` AS `expireTime` FROM `transactions` WHERE `id` = ( SELECT LAST_INSERT_ID() )", function( query )
+		credits.db.query( credits.db.queries.setCredits:format( amount, pl:SteamID64() ) .. credits.db.queries.insertTransaction:format( duration or "null", pl:SteamID64(), package.uniqueid, -price, package.type, credits.db.conn:escape( util.TableToJSON( package.vars ) ), time ) .. "SELECT LAST_INSERT_ID() AS `id` FROM `transactions`; SELECT `expireTime` AS `expireTime` FROM `transactions` WHERE `id` = ( SELECT LAST_INSERT_ID() )", function( query )
 			if ( IsValid( pl ) ) then
 				-- Skip the results from setting credits and setting a variable in sql
 				query:getNextResults()
@@ -331,12 +332,9 @@ function credits.initializePlayer( pl )
 	-- 	return
 	-- end
 
-	credits.getData( pl:SteamID64(), function( creditAmount, transactions )		
+	credits.getData( pl:SteamID64(), function( creditAmount, transactions, error )		
 		if ( IsValid( pl ) ) then
-			pl.credits = {
-				[ "amount" ]		= creditAmount,
-				[ "transactions" ] 	= {}
-			}
+			pl.credits = { [ "transactions" ] = {} }
 
 			for k, v in ipairs( transactions ) do
 				pl.credits.transactions[ v.id ] = v

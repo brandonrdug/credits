@@ -19,7 +19,7 @@ function credits.db.query( queryStr, func )
 	query.onSuccess = func
 
 	query.onError = function( sql, err, sqlStr )
-		error( "credits query failed:\n\t" .. err .. ":\n\t" .. sqlStr )
+		error( "credits query failed:\n\t" .. err )
 	end
 
 	query:start()
