@@ -244,7 +244,7 @@ function PANEL:PopulatePackages( filter )
 		self.pckgCategories[ k ] = self:CreateCategory( k, false )
 	end
 
-	for k, v in pairs( credits.packages ) do
+	for k, v in ipairs( credits.packages ) do
 		if ( not ( v.disabled == 1 ) ) then
 			local pckg = self.pckgCategories[ v.category ]:Add( "ex.credits.pckg" )
 			pckg:SetData( v )
