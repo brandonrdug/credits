@@ -49,7 +49,7 @@ function credits.setCredits( steamID64, int, callback, adminID64 )
 
 			callback()
 		end, "PUT", "https://hubtesting.exhibitionrp.com/api/store/addcredits", {}, {
-			["Authorization"] = "f=(ZlHj/wIK@^p>j%<;$,Q_H#c]pXw*^ilHnmHAVwy1+ppy_yntse+HRlR[pvz"
+			["Authorization"] = "auth_token"
 		}, util.TableToJSON( { 
 			["steamid"] = steamID64,
 			["credits"] = int - amount,

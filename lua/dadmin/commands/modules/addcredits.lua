@@ -55,7 +55,7 @@ da.commands:Command( "addcredits" )
 									:Send()
 							end
 						end, pl and pl:SteamID64() )
-					else if ( error == 404 ) then
+					elseif ( error == 404 ) then
 						da.sendcmderr( pl, cmd, "User hasn't signed in on the website. Have them make one and try again." )
 					else
 						da.sendcmderr( pl, cmd, "Something went wrong! Contact a developer." )

@@ -35,7 +35,7 @@ da.commands:Command( "getcredits" )
 								:Insert( tostring( creditAmount ):Comma() )
 								:Send()
 						end
-					else if ( error == 404 ) then
+					elseif ( error == 404 ) then
 						da.sendcmderr( pl, cmd, "User hasn't signed in on our website, so they don't have any credits." )
 					else
 						da.sendcmderr( pl, cmd, "Something went wrong! Contact a developer." )
