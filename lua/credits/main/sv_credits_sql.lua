@@ -122,7 +122,7 @@ credits.db.queries = {
 	insertTransaction = [[
 		SET @duration = %s;
 		INSERT INTO `CreditTransactions` ( `steamID64`, `package`, `credits`, `type`, `vars`, `time`, `expireTime`, `server` )
-			VALUES ( '%s', '%s', %s, '%s', '%s', UNIX_TIMESTAMP(), IF( @duration, @duration + UNIX_TIMESTAMP(), null '), ]] .. credits.config.get( "server" ) .. "');",
+			VALUES ( '%s', '%s', %s, '%s', '%s', UNIX_TIMESTAMP(), IF( @duration, @duration + UNIX_TIMESTAMP(), null ), ']] .. credits.config.get( "server" ) .. "');",
 	disableTransactionByPackage = [[
 		UPDATE `CreditTransactions` 
 			SET `disabled` = 1,

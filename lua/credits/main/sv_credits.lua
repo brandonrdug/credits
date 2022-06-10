@@ -42,19 +42,28 @@ function credits.setCredits( steamID64, int, callback, adminID64 )
 			return callback( error )
 		end
 
-		HTTP( function() end, function( code, body, headers )
-			if ( code == 404 ) then
-				return callback(code)
-			end
+		HTTP( {
+			failed = function() end,
+			success = function( code, body, headers )
+				if ( code == 404 ) then
+					return callback(code)
+				end
 
-			callback()
-		end, "PUT", "https://hubtesting.exhibitionrp.com/api/store/addcredits", {}, {
-			["Authorization"] = "auth_token"
-		}, util.TableToJSON( { 
-			["steamid"] = steamID64,
-			["credits"] = int - amount,
-			["adminid"] = adminID64
-		} ), "application/json" )
+				callback()
+			end, 
+			method = "PUT", 
+			url = "https://hubtesting.exhibitionrp.com/api/store/addcredits", 
+			parameters = {}, 
+			headers = {
+				["Authorization"] = "auth_token"
+			}, 
+			body = util.TableToJSON( { 
+				["steamid"] = steamID64,
+				["credits"] = int - amount,
+				["adminid"] = adminID64
+			} ),
+			type = "application/json" 
+		} )
 	end )
 end
 
@@ -143,7 +152,6 @@ function credits.setSale( percentage )
 end
 
 // @ adjust for asynchronous checks on credits
-
 function credits.transact( pl, packageID, charge, callback )
 	-- assert( pl.credits, pl:NameID() .. " is not initialized." )
 
@@ -206,47 +214,58 @@ function credits.transact( pl, packageID, charge, callback )
 		end
 
 		local time = os.time()
+		local id64 = pl:SteamID64()
 
-		credits.db.query( credits.db.queries.setCredits:format( amount, pl:SteamID64() ) .. credits.db.queries.insertTransaction:format( duration or "null", pl:SteamID64(), package.uniqueid, -price, package.type, credits.db.conn:escape( util.TableToJSON( package.vars ) ), time ) .. "SELECT LAST_INSERT_ID() AS `id` FROM `transactions`; SELECT `expireTime` AS `expireTime` FROM `transactions` WHERE `id` = ( SELECT LAST_INSERT_ID() )", function( query )
-			if ( IsValid( pl ) ) then
-				-- Skip the results from setting credits and setting a variable in sql
+		pl:SetCredits( amount - price, function()
+			credits.db.query( credits.db.queries.insertTransaction:format( duration or "null", id64, package.uniqueid, -price, package.type, credits.db.conn:escape( util.TableToJSON( package.vars ) ), time ), function( query, data )
 				query:getNextResults()
-					query:getNextResults()
-				local id = query:getNextResults()[ 1 ][ "id" ]
 
-				pl:GetCreditTransactions()[ id ] = {
-					[ "id" ] 			= id,
-					[ "steamID64" ] 	= pl:SteamID64(),
-					[ "package" ] 		= package.uniqueid,
-					[ "credits" ] 		= -price,
-					[ "activated" ] 	= 0,
-					[ "type" ]			= package.type,
-					[ "vars" ]			= package.vars,
-					[ "time" ] 			= time,
-					[ "expireTime" ]	= query:getNextResults()[ 1 ][ "expireTime" ],
-					[ "disabled" ]		= 0
-				}
+				local id = query:lastInsert()
 
-				credits.net.sendCredits( pl )
-				credits.net.sendTransaction( pl, pl:GetCreditTransactions()[ id ] )
+				if ( IsValid( pl ) ) then
+					// 2nd query because mysqloo was buggin with query:getNextResults()
+					credits.db.query("SELECT `expireTime` FROM `CreditTransactions` WHERE `id` = " .. id, function( query, data )
+						if ( IsValid( pl ) ) then
+							pl:GetCreditTransactions()[ id ] = {
+								[ "id" ] 			= id,
+								[ "steamID64" ] 	= id64,
+								[ "package" ] 		= package.uniqueid,
+								[ "credits" ] 		= -price,
+								[ "activated" ] 	= 0,
+								[ "type" ]			= package.type,
+								[ "vars" ]			= package.vars,
+								[ "time" ] 			= time,
+								[ "expireTime" ]	= data[ 1 ][ "expireTime" ],
+								[ "disabled" ]		= 0
+							}
 
-				hook.Run( "packageBought", pl, package, pl:GetCreditTransactions()[ id ] )
+							credits.net.sendCredits( pl )
+							credits.net.sendTransaction( pl, pl:GetCreditTransactions()[ id ] )
 
-				da.amsg( "Someone bought something! thanks # for buying #!" )
-					:Insert( pl )
-					:Insert( DA_COLOR, package.name )
-					:Send()
+							hook.Run( "packageBought", pl, package, pl:GetCreditTransactions()[ id ] )
 
-				credits.runAction( pl, id )
+							da.amsg( "Someone bought something! thanks # for buying #!" )
+								:Insert( pl )
+								:Insert( DA_COLOR, package.name )
+								:Send()
 
-				if ( callback ) then
-					callback()
+							credits.runAction( pl, id )
+
+							if ( callback ) then
+								callback()
+							end
+						else
+							if ( callback ) then
+								callback( "disconnected" )
+							end
+						end
+					end )
+				else
+					if ( callback ) then
+						callback( "disconnected" )
+					end
 				end
-			else
-				if ( callback ) then
-					callback( "disconnected" )
-				end
-			end
+			end )
 		end )
 	end )
 end
@@ -259,7 +278,7 @@ function credits.runAction( pl, transactionid, callback )
 	if ( transaction.disabled == 0 ) then
 		if ( transaction.activated == 0 ) then
 			if ( not credits.isExpired( transaction ) ) then
-				credits.db.query( "UPDATE `transactions` SET `activated` = 1, `vars` = '" .. credits.db.conn:escape( util.TableToJSON( transaction.vars ) ) .. "' WHERE `steamID64` = '" .. pl:SteamID64() .. "' AND `id` = " .. transaction.id, function( query )
+				credits.db.query( "UPDATE `CreditTransactions` SET `activated` = 1, `vars` = '" .. credits.db.conn:escape( util.TableToJSON( transaction.vars ) ) .. "' WHERE `steamID64` = '" .. pl:SteamID64() .. "' AND `id` = " .. transaction.id, function( query )
 					if ( IsValid( pl ) ) then
 						type.action( pl, transaction )
 
