@@ -6,7 +6,11 @@
 ]]--
 
 function credits.getPackage( id )
-	return credits.packages[id]
+	for k, v in ipairs( credits.packages ) do
+		if ( v.uniqueid == id ) then
+			return v
+		end
+	end
 end
 
 --[[

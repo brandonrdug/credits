@@ -151,7 +151,7 @@ net.CooledReceiver( "credits.playerTransaction", 2, function( len, pl )
 
 		credits.transact( pl, packageid, true, function( status )
 			if ( status == 404 ) then
-				da.sendmsg( pl, "You need an account on our website to make any transactions." )
+				da.sendmsg( pl, "You need to sign in on our website to make any transactions." )
 			elseif ( status == "cant_afford" ) then
 				-- Send them a lil message because they couldn't have gotten here without running clientside-lua
 				da.sendmsg( pl, "You can't afford this package, how'd you get here?" )

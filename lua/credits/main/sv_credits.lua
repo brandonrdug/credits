@@ -5,19 +5,21 @@ credits.packages = {}
 // CURRENTLY ON THIS ~!@@# $@Q#$ WEFDFDF GDFG DFGGDFDFG DFGGDF XCVDFGDFGS DF DFFG 
 function credits.getData( steamID64, callback )
 	credits.db.query( credits.db.queries.getData:format( steamID64 ), function( query, data )
-		local data = query:getNextResults()
+		data = query:getNextResults()
 
-		if ( data[ 1 ] ) then
-			local credits = data[ 1 ].credits
-			query:getNextResults()
-			
-			if ( callback ) then
-				callback( credits, query:getData() )
-			end
-		else
+		if ( !data or !data[ 1 ] ) then
 			if ( callback ) then
 				callback( nil, nil, 404 )
 			end
+			
+			return
+		end
+
+		local credits = data[ 1 ].credits
+		query:getNextResults()
+		
+		if ( callback ) then
+			callback( credits, query:getData() )
 		end
 	end )
 end
@@ -76,8 +78,10 @@ function credits.newPackage( uniqueid, info )
 	-- credits.db.query( credits.db.queries.insertPackage:format( uniqueid, info.name, info.category, description, info.credits, info.type, upgradeFrom or "null", info.buyOnce or "null", info.order or "null", image or "null", JSON, info.duration or "null" ) .. credits.db.queries.getMaxID, function( query )
 
 	-- local id = query:getNextResults()[ 1 ][ "id" ]
-
-	credits.packages[ uniqueid ] = {
+	local id = #credits.packages + 1
+	
+	credits.packages[ id ] = {
+		[ "id" ]			= id,
 		[ "uniqueid" ] 		= uniqueid,
 		[ "name" ] 			= info.name,
 		[ "category" ] 		= info.category,
@@ -95,7 +99,7 @@ function credits.newPackage( uniqueid, info )
 		[ "disabled" ]		= 0
 	}
 
-	credits.net.newPackage( credits.packages[ uniqueid ] )
+	credits.net.newPackage( credits.packages[ id ] )
 
 		// @ previously callback was an arg
 		-- if ( callback ) then
@@ -334,6 +338,11 @@ function credits.initializePlayer( pl )
 
 	credits.getData( pl:SteamID64(), function( creditAmount, transactions, error )		
 		if ( IsValid( pl ) ) then
+			if ( error ) then
+				creditAmount = 0
+				transactions = {}
+			end
+
 			pl.credits = { [ "transactions" ] = {} }
 
 			for k, v in ipairs( transactions ) do

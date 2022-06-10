@@ -10,7 +10,7 @@ da.commands:Command( "getcredits" )
 			targ:GetCredits( function( amount, error )
 				if ( error ) then
 					if ( IsValid( pl ) ) then
-						pl:Message( "# does not have an account on our website, so they don't have any credits." )
+						pl:Message( "# hasn't signed in  on our website, so they don't have any credits." )
 							:Insert( IsValid( targ ) and targ or targID )
 							:Send()
 					end
@@ -36,7 +36,7 @@ da.commands:Command( "getcredits" )
 								:Send()
 						end
 					else if ( error == 404 ) then
-						da.sendcmderr( pl, cmd, "User does not have an account on our website, so they don't have any credits." )
+						da.sendcmderr( pl, cmd, "User hasn't signed in on our website, so they don't have any credits." )
 					else
 						da.sendcmderr( pl, cmd, "Something went wrong! Contact a developer." )
 					end

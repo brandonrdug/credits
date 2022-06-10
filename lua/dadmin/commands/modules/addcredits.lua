@@ -14,7 +14,7 @@ da.commands:Command( "addcredits" )
 
 			targ:GetCredits( function( amount, error )
 				if ( error ) then
-					pl:Message( "# does not have an account on our website. Have them make one and then try again." )
+					pl:Message( "# hasn't signed in on our website. Have them make one and then try again." )
 						:Insert( IsValid( targ ) and targ or targID )
 						:Send()
 					
@@ -56,7 +56,7 @@ da.commands:Command( "addcredits" )
 							end
 						end, pl and pl:SteamID64() )
 					else if ( error == 404 ) then
-						da.sendcmderr( pl, cmd, "User doesn't have an account on the website. Have them make one and try again." )
+						da.sendcmderr( pl, cmd, "User hasn't signed in on the website. Have them make one and try again." )
 					else
 						da.sendcmderr( pl, cmd, "Something went wrong! Contact a developer." )
 					end

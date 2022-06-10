@@ -58,6 +58,8 @@ net.Receive( "credits.playerTransaction", function()
 end )
 
 net.receiveTableStream( "credits.sendPackages", function( packages )
+	LocalPlayer().credits = LocalPlayer().credits or {}
+
 	credits.packages = packages
 
 	if ( LocalPlayer().credits.transactions ) then
@@ -72,6 +74,8 @@ net.receiveTableStream( "credits.sendPackages", function( packages )
 end )
 
 net.receiveTableStream( "credits.sendTransactions", function( transactions )
+	LocalPlayer().credits = LocalPlayer().credits or {}
+
 	LocalPlayer().credits.transactions = transactions
 
 	if ( credits.packages ) then

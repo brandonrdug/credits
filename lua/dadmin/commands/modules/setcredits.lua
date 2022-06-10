@@ -53,7 +53,7 @@ da.commands:Command( "setcredits" )
 							end
 						end )
 					else if ( error == 404 ) then
-						da.sendcmderr( pl, cmd, "User doesn't have an account on the website. Have them make one and try again." )
+						da.sendcmderr( pl, cmd, "User hasn't signed in on the website. Have them make one and try again." )
 					else
 						da.sendcmderr( pl, cmd, "Something went wrong! Contact a developer." )
 					end

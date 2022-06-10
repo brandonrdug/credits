@@ -18,8 +18,8 @@ function credits.db.query( queryStr, func )
 	local query = credits.db.conn:query( queryStr )
 	query.onSuccess = func
 
-	query.onError = function( sql, err, sqlStr )
-		error( "credits query failed:\n\t" .. err )
+	query.onError = function( sql, err )
+		error( "credits query failed:\n\t" .. err .. "\n\t" .. queryStr )
 	end
 
 	query:start()
@@ -64,7 +64,7 @@ end
 credits.db.query( [[
 	CREATE TABLE IF NOT EXISTS `CreditTransactions` (
 		`id` int				NOT NULL AUTO_INCREMENT,
-		`steamID` varchar(20)	NOT NULL,
+		`steamID64` varchar(20)	NOT NULL,
 		`package` tinytext		NOT NULL,
 		`credits` int			NOT NULL,
 		`activated` bool		DEFAULT 0,
