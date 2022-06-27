@@ -1,13 +1,9 @@
 -- credits.queue = {}
 credits.packages = {}
 
-
-// CURRENTLY ON THIS ~!@@# $@Q#$ WEFDFDF GDFG DFGGDFDFG DFGGDF XCVDFGDFGS DF DFFG 
 function credits.getData( steamID64, callback )
-	credits.db.query( credits.db.queries.getData:format( steamID64 ), function( query, data )
-		data = query:getNextResults()
-
-		if ( !data or !data[ 1 ] ) then
+	credits.db.query( credits.db.queries.getCredits:format( steamID64 ), function( query, data )
+		if ( !data[ 1 ] ) then
 			if ( callback ) then
 				callback( nil, nil, 404 )
 			end
@@ -15,12 +11,13 @@ function credits.getData( steamID64, callback )
 			return
 		end
 
-		local credits = data[ 1 ].credits
-		query:getNextResults()
-		
-		if ( callback ) then
-			callback( credits, query:getData() )
-		end
+		local playerCredits = data[ 1 ].credits
+
+		credits.db.query( credits.db.queries.getTransactions:format( steamID64 ), function( query, data )
+			if ( callback ) then
+				callback( credits, data )
+			end
+		end )
 	end )
 end
 

@@ -1,4 +1,5 @@
 net.Receive( "credits.updatePropCount", function()
+	LocalPlayer().credits = LocalPlayer().credits or {}
 	LocalPlayer().credits.propCount = net.ReadUInt( 10 )
 end )
 

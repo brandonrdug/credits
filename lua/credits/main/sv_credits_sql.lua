@@ -6,14 +6,6 @@ function credits.db.conn:onConnectionFailed( err )
 	error( "credits connection failed:\n\t" .. err )
 end
 
---[[
-	Name: query
-	Desc: Runs a query with the provided string, and calls back with data returned from the query
-	Params: <string> Query, <function> Function
-	Returns: <query> Query
-	Callback Args: <query> Query, <table> Data
-]]--
-
 function credits.db.query( queryStr, func )
 	local query = credits.db.conn:query( queryStr )
 	query.onSuccess = func
@@ -87,13 +79,12 @@ credits.db.queries = {
 	-- ]],
 	// alter for hub table
 	// make avoid transactions from other servers
-	getData = [[
-		SET @steamID64 = '%s';
-		SELECT `credits` FROM `Users`
-			WHERE `steamid` = @steamID64;
-		SELECT * FROM `CreditTransactions`
-			WHERE `steamID64` = @steamID64
-				AND `server` = ']] .. credits.config.get( "server" ) .. "';",
+	-- getData = [[
+	-- 	SELECT `credits` FROM `Users`
+	-- 		WHERE `steamid` = '%s';
+	-- 	SELECT * FROM `CreditTransactions`
+	-- 		WHERE `steamID64` = '%s'
+	-- 			AND `server` = ']] .. credits.config.get( "server" ) .. "';",
 	// alter as an api call
 	-- setCredits = [[
 	-- 	UPDATE `users`
@@ -105,6 +96,10 @@ credits.db.queries = {
 			FROM `Users`
 			WHERE `steamid` = '%s';
 	]],
+	getTransactions = [[
+		SELECT * FROM `CreditTransactions`
+			WHERE `steamID64` = '%s'
+			AND `server` = ']] .. credits.config.get( "server" ) .. "';",
 	-- // cut
 	-- insertPackage = [[
 	-- 	INSERT INTO `packages` ( `uniqueid`, `name`, `category`, `description`, `credits`, `type`, `upgradeFrom`, `buyOnce`, `order`, `image`, `vars`, `duration` )
