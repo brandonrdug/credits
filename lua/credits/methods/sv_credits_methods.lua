@@ -37,6 +37,12 @@ end
 
 hook( "PlayerSpawn", "credits", credits.spawnMethods )
 
+hook( "canDropWeapon", "credits", function( pl, weapon )
+	if ( weapon.permanentWeapon ) then
+		return false
+	end
+end )
+
 hook( "OnPlayerChangedTeam", "credits", function( pl )
 	timer.Simple( 0, function()
 		credits.spawnMethods( pl )

@@ -1,4 +1,3 @@
--- credits.queue = {}
 credits.packages = {}
 
 function credits.getData( steamID64, callback )
@@ -31,8 +30,6 @@ function credits.getCredits( steamID64, callback )
 	end )
 end
 
-// @ alter to be an api call
-// done
 function credits.setCredits( steamID64, int, callback, adminID64 )
 	credits.getCredits( steamID64, function( amount, error )
 		if ( error ) then
@@ -64,8 +61,6 @@ function credits.setCredits( steamID64, int, callback, adminID64 )
 	end )
 end
 
-// @ cut
-// edited
 function credits.newPackage( uniqueid, info )
 	uniqueid = uniqueid:lower()
 
@@ -73,17 +68,6 @@ function credits.newPackage( uniqueid, info )
 		return
 	end
 
-	-- local duration = ( info.duration == 0 ) and nil or info.duration
-
-	-- local JSON = credits.db.conn:escape( util.TableToJSON( info.vars or {} ) )
-	-- local description = info.description and credits.db.conn:escape( info.description ) or ""
-	-- local upgradeFrom = info.upgradeFrom and credits.db.conn:escape( util.TableToJSON( info.upgradeFrom ) )
-	-- local image = info.image and ( istable( info.image ) and credits.db.conn:escape( util.TableToJSON( info.image ) ) or info.image )
-		-- image = image and "'" .. image .. "'"
-
-	-- credits.db.query( credits.db.queries.insertPackage:format( uniqueid, info.name, info.category, description, info.credits, info.type, upgradeFrom or "null", info.buyOnce or "null", info.order or "null", image or "null", JSON, info.duration or "null" ) .. credits.db.queries.getMaxID, function( query )
-
-	-- local id = query:getNextResults()[ 1 ][ "id" ]
 	local id = #credits.packages + 1
 	
 	credits.packages[ id ] = {
@@ -106,52 +90,30 @@ function credits.newPackage( uniqueid, info )
 	}
 
 	credits.net.newPackage( credits.packages[ id ] )
-
-		// @ previously callback was an arg
-		-- if ( callback ) then
-		-- 	callback( credits.packages[ id ] )
-		-- end
-	-- end )
 end
 
-// @ cut
-
-function credits.setDiscount( packageid, percentage, callback )
-	assert( credits.packages, "Packages aren't initialized yet; can't set discount of " .. packageid )
-
+function credits.setDiscount( packageid, percentage )
 	local package = credits.getPackage( packageid )
 
 	if ( package ) then
-		credits.db.query( credits.db.queries.updateDiscount:format( percentage, package.uniqueid ), function()
-			package.discount = percentage
+		package.discount = percentage
 
-			credits.net.updatePackage( package, "discount" )
-			callback( package )
-		end )
+		credits.net.updatePackage( package, "discount" )
 	end
 end
 
-// @ adjust
-
 function credits.setSale( percentage )
-	assert( credits.packages, "Packages aren't initialized yet; can't set discount" )
-
 	if ( percentage <= 0 ) then
-		percentage = "NULL"
+		percentage = nil
 	end
 
 	for k, v in ipairs( credits.packages ) do
-		credits.db.query( credits.db.queries.updateDiscount:format( percentage, '"' .. v.id .. '"' ), function()
-			v.discount = ( percentage != "NULL" and percentage ) or nil
-			credits.net.updatePackage( v, "discount" )
-		end )
+		v.discount = ( percentage != nil and percentage ) or nil
+		credits.net.updatePackage( v, "discount" )
 	end
 end
 
-// @ adjust for asynchronous checks on credits
 function credits.transact( pl, packageID, charge, callback )
-	-- assert( pl.credits, pl:NameID() .. " is not initialized." )
-
 	local package = credits.getPackage( packageID )
 	assert( package.disabled == 0, "This package is disabled, how'd they get to buying this?" )
 
@@ -318,40 +280,7 @@ function credits.runAction( pl, transactionid, callback )
 	end
 end
 
-// initialize players
-
--- credits.db.query( "SELECT * FROM `packages`", function( query, packages )
--- 	// @ cut
--- 	for k, v in pairs( packages ) do
--- 		v.vars = v.vars and util.JSONToTable( v.vars )
--- 		v.upgradeFrom = v.upgradeFrom and util.JSONToTable( v.upgradeFrom )
-		
--- 		-- if v.image == a url instead of a table, JSONToTable will return nil and we can correct for that
--- 		local JtT = v.image and util.JSONToTable( v.image )
--- 			v.image = v.image and ( JtT or v.image )
--- 	end
-
--- 	credits.packages = packages
-
--- 	for k, v in ipairs( credits.queue ) do
--- 		if ( IsValid( v ) ) then
--- 			credits.InitializePlayer( v )
--- 		end
--- 	end
-
--- 	credits.queue = nil
-
--- 	hook.Run( "creditPackagesLoaded" )
--- end )
-
 function credits.initializePlayer( pl )
-	// insert into queue for initialization
-	// @ cut
-	-- if ( not credits.packages ) then
-	-- 	table.insert( credits.queue, pl )
-	-- 	return
-	-- end
-
 	credits.getData( pl:SteamID64(), function( creditAmount, transactions, error )		
 		if ( IsValid( pl ) ) then
 			if ( error ) then
