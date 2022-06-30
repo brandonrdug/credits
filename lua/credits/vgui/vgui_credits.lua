@@ -125,8 +125,6 @@ function PANEL:LayoutDescription()
 			end
 		end
 
-		PrintTable( wrapper )
-
 		self.package.wrappedDescription = wrapper
 	end
 end
@@ -198,7 +196,7 @@ function PANEL:Load()
 		if ( self.pckgView.purchase.lastClick <= CurTime() - 2 ) then
 			self.pckgView.purchase.lastClick = CurTime()
 			
-			if ( not self.packagePnl:PackageOwned() and LocalPlayer():GetCredits() >= self.packagePnl:Price() ) then
+			if ( self.packagePnl and not self.packagePnl:PackageOwned() and LocalPlayer():GetCredits() >= self.packagePnl:Price() ) then
 				Derma_Query( "Are you sure you want to buy " .. self.package.name .. " for " .. self.packagePnl:Price() .. " credits?", "Confirm Purchase", "Yes", function()
 					if ( IsValid( self ) ) then
 						net.Start( "credits.playerTransaction" )
@@ -419,7 +417,7 @@ function PCKG:SetData( package )
 		end )
 	end
 
-	if ( modelTypes[ package.type ] ) then
+	if ( package.vars.model or modelTypes[ package.type ] ) then
 		local model = package.vars.model
 
 		if ( not model and ( package.type == "weapon" or package.type == "upgradedWeapon" ) ) then
