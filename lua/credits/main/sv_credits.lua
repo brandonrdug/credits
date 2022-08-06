@@ -265,7 +265,7 @@ function credits.runAction( pl, transactionid, callback )
 		else
 			if ( not transaction.vars.runOnce ) then
 				if ( not credits.isExpired( transaction ) ) then
-					type.action( pl, transaction )
+					type.action( pl, transaction, true )
 					
 					if ( callback ) then
 						callback()
