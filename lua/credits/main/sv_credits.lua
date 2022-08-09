@@ -46,10 +46,10 @@ function credits.setCredits( steamID64, int, callback, adminID64 )
 				callback()
 			end, 
 			method = "PUT", 
-			url = "https://hubtesting.exhibitionrp.com/api/store/addcredits", 
+			url = credits.config.get( "APIBaseURL" ) .. "/addcredits", 
 			parameters = {}, 
 			headers = {
-				["Authorization"] = "auth_token"
+				["Authorization"] = credits.config.get( "APIAuthToken" )
 			}, 
 			body = util.TableToJSON( { 
 				["steamid"] = steamID64,
@@ -293,9 +293,6 @@ function credits.initializePlayer( pl )
 			for k, v in ipairs( transactions ) do
 				pl.credits.transactions[ v.id ] = v
 			end
-
-			// @ cut to only request when opening f4
-			// credits.net.sendCredits( pl )
 
 			-- run player inits for package prereqs
 			for k, v in pairs( credits.config.get( "packageTypes" ) ) do
